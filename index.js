@@ -48,7 +48,7 @@ async function insertWeatherData() {
     const weatherData = generateWeatherData();
     try {
         if (weatherData !== null) {
-            await axios.patch('http://localhost:3000/api/weather/byDistrict', {
+            await axios.patch('http://localhost:3002/api/weather/byDistrict', {
                 district: weatherData.district,
                 weatherData: weatherData
             });

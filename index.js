@@ -29,10 +29,20 @@ function generateWeatherData(district) {
 async function insertWeatherDataForDistrict(district) {
     const weatherData = generateWeatherData(district);
     try {
-        await axios.patch('http://localhost:3002/api/weather/byDistrict', {
-            district: district,
-            weatherData: weatherData
-        });
+        const apiKey = 'xvkffkvkrsvmtormbgdttjdcjgfskmsrhfsrmg';
+        await axios.patch(
+            'https://weatherapinodejsbackendcw.onrender.com/api/v1/weather/lk/byDistrict',
+            {
+                district: district,
+                weatherData: weatherData
+            },
+            {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-api-key': apiKey
+                }
+            }
+        );
         console.log(`Weather data inserted successfully for ${district}.`);
     } catch (error) {
         console.error(`Error inserting weather data for ${district}:`, error.message);

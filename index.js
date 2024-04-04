@@ -4,10 +4,8 @@ const cron = require('node-cron');
 const axios = require('axios');
 const WeatherData = require('./WeatherData');
 
-// Function to generate random weather data
-let generatedWeatherData = null;
-
-cron.schedule('*/5 * * * *', () => {
+// Function to generate random weather data for a given district
+function generateWeatherData(district) {
     // Example: Temperature in Celsius (valid range: 15°C to 40°C)
     const temperature = Math.floor(Math.random() * 26) + 15;
 
@@ -25,44 +23,40 @@ cron.schedule('*/5 * * * *', () => {
     // Get current date and time
     const lastUpdatedDateTime = new Date().toLocaleDateString() + " at " + new Date().toLocaleTimeString()
 
-    const districtsOfSriLanka = [
-        "Ampara", "Anuradhapura", "Badulla", "Batticaloa", "Colombo",
-        "Galle", "Gampaha", "Hambantota", "Jaffna", "Kalutara", "Kandy",
-        "Kegalle", "Kilinochchi", "Kurunegala", "Mannar", "Matale",
-        "Matara", "Monaragala", "Mullaitivu", "Nuwara Eliya", "Polonnaruwa",
-        "Puttalam", "Ratnapura", "Trincomalee", "Vavuniya"
-    ];
-
-    // Select a random district
-    const randomIndex = Math.floor(Math.random() * districtsOfSriLanka.length);
-    const district = districtsOfSriLanka[randomIndex];
-
-    generatedWeatherData = new WeatherData(temperature, isActiveIoTDeviceTemperature, humidity, isActiveIoTDeviceHumidity, airPressure, isActiveIoTDeviceAirPressure, lastUpdatedDateTime, district);
-});
-
-function generateWeatherData() {
-    return generatedWeatherData;
+    return new WeatherData(temperature, isActiveIoTDeviceTemperature, humidity, isActiveIoTDeviceHumidity, airPressure, isActiveIoTDeviceAirPressure, lastUpdatedDateTime, district);
 }
 
-async function insertWeatherData() {
-    const weatherData = generateWeatherData();
+async function insertWeatherDataForDistrict(district) {
+    const weatherData = generateWeatherData(district);
     try {
-        if (weatherData !== null) {
-            await axios.patch('http://localhost:3002/api/weather/byDistrict', {
-                district: weatherData.district,
-                weatherData: weatherData
-            });
-        }
-        console.log(weatherData !== null ? 'Weather data inserted successfully.' : 'Not found weather data!');
+        await axios.patch('http://localhost:3002/api/weather/byDistrict', {
+            district: district,
+            weatherData: weatherData
+        });
+        console.log(`Weather data inserted successfully for ${district}.`);
     } catch (error) {
-        console.error('Error inserting weather data:', error.message);
+        console.error(`Error inserting weather data for ${district}:`, error.message);
+    }
+}
+
+// Generate and insert weather data for all districts
+const districtsOfSriLanka = [
+    "Ampara", "Anuradhapura", "Badulla", "Batticaloa", "Colombo",
+    "Galle", "Gampaha", "Hambantota", "Jaffna", "Kalutara", "Kandy",
+    "Kegalle", "Kilinochchi", "Kurunegala", "Mannar", "Matale",
+    "Matara", "Monaragala", "Mullaitivu", "Nuwara Eliya", "Polonnaruwa",
+    "Puttalam", "Ratnapura", "Trincomalee", "Vavuniya"
+];
+
+async function insertWeatherDataForAllDistricts() {
+    for (const district of districtsOfSriLanka) {
+        await insertWeatherDataForDistrict(district);
     }
 }
 
 cron.schedule('*/5 * * * *', () => {
-    insertWeatherData();
+    insertWeatherDataForAllDistricts();
 });
-
 
 // Serve static files (HTML, CSS, JS) from the public directory
 app.use(express.static('public'));
